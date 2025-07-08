@@ -30,6 +30,7 @@ gdf_hospitals = gpd.read_file("./POI/hospitals.geojson").to_crs(epsg=4326)
 
 center_options = list(isochrone_files.keys())
 
+
 with st.sidebar:
     selected_center = st.selectbox("Select Center", center_options)
 
@@ -54,6 +55,36 @@ if "map_center" not in st.session_state:
     st.session_state["map_center"] = [start_point.y, start_point.x]
 if "map_zoom" not in st.session_state:
     st.session_state["map_zoom"] = 12
+if "prev_filters" not in st.session_state:
+    st.session_state.prev_filters = {}
+if "last_map_data" not in st.session_state:
+    st.session_state.last_map_data = None
+
+
+# === Detect filter change BEFORE map creation ===
+filters_changed = (
+    st.session_state.prev_filters.get("show_schools") != show_schools or
+    st.session_state.prev_filters.get("show_hospitals") != show_hospitals or 
+    st.session_state.prev_filters.get("selected_center") != selected_center or
+    st.session_state.prev_filters.get("selected_minutes") != selected_minutes
+)
+
+if filters_changed and st.session_state.last_map_data:
+    map_data = st.session_state.last_map_data
+    if "center" in map_data and "zoom" in map_data:
+        st.session_state.map_center = [
+            map_data["center"]["lat"],
+            map_data["center"]["lng"]
+        ]
+        st.session_state.map_zoom = map_data["zoom"]
+
+# === Now update stored filters (for next round) ===
+st.session_state.prev_filters = {
+    "show_schools": show_schools,
+    "show_hospitals": show_hospitals,
+    "selected_center": selected_center,
+    "selected_minutes": selected_minutes
+}
 
 # Create a Folium map
 m = folium.Map(location=st.session_state["map_center"], zoom_start=st.session_state["map_zoom"] , tiles=None, control_scale=True)
@@ -118,6 +149,36 @@ if show_hospitals:
         ).add_to(m)
 
 
+# Detect if filters changed (compared to previous state)
+filter_keys = ["show_schools", "show_hospitals", "selected_center", "selected_minutes"]
+if "prev_filters" not in st.session_state:
+    st.session_state["prev_filters"] = {}
+
+filters_changed = (
+    st.session_state["prev_filters"].get("show_schools") != show_schools or
+    st.session_state["prev_filters"].get("show_hospitals") != show_hospitals or
+    st.session_state["prev_filters"].get("selected_center") != selected_center or 
+    st.session_state["prev_filters"].get("selected_minutes") != selected_minutes 
+)
+
+# Save previous map view only if filters are changed
+if filters_changed and "last_map_data" in st.session_state:
+    map_data = st.session_state["last_map_data"]
+    if map_data and "center" in map_data and "zoom" in map_data:
+        st.session_state["map_center"] = [
+            map_data["center"]["lat"],
+            map_data["center"]["lng"]
+        ]
+        st.session_state["map_zoom"] = map_data["zoom"]
+
+# Update stored filter values
+st.session_state["prev_filters"] = {
+    "show_schools": show_schools,
+    "show_hospitals": show_hospitals,
+    "selected_center": selected_center,
+    "selected_minutes": selected_minutes
+}
+
 # Add legend
 colormap.caption = 'Minutes from Origin'
 colormap.add_to(m)
@@ -128,6 +189,9 @@ colormap.add_to(m)
 
 # Display the map
 map_data = st_folium(m, use_container_width=True, height=650, key="iso_map", returned_objects=["last_object_clicked", "center", "zoom"])
+
+# Save latest map state to session
+st.session_state["last_map_data"] = map_data
 
 # if map_data and "zoom" in map_data and "center" in map_data:
 #     center_dict = map_data["center"]
