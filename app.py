@@ -127,7 +127,7 @@ colormap.add_to(m)
 # folium.GeoJson(gdf).add_to(m)
 
 # Display the map
-map_data = st_folium(m, use_container_width=True, height=600, key="iso_map", returned_objects=["last_object_clicked", "center", "zoom"])
+map_data = st_folium(m, use_container_width=True, height=650, key="iso_map", returned_objects=["last_object_clicked", "center", "zoom"])
 
 # if map_data and "zoom" in map_data and "center" in map_data:
 #     center_dict = map_data["center"]
