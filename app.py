@@ -12,8 +12,10 @@ st.set_page_config(layout="wide")
 
 # Load GeoJSON files
 isochrone_files = {
-    "Center 1": "scuola1.geojson",
-    "Center 2": "scuola2.geojson"
+    "Istituto Giovanni Pascoli": "scuola_giovanni_pascoli.geojson",
+    "Liceo Volta": "scuola_volta.geojson",
+    "Istituto Borgovico": "istituto_borgovico.geojson",
+    "Stadio Senigallia" : "stadio.geojson"
 }
 
 # Dropdown for center selection
@@ -47,8 +49,14 @@ start_point = gdf[gdf["contour"] == gdf["contour"].min()].geometry.centroid.iloc
 # Get centroid of polygons to center the map
 # map_center = gdf.geometry.centroid.iloc[0].coords[0][::-1]  # (lat, lon)
 
+# Initialize default map center and zoom
+if "map_center" not in st.session_state:
+    st.session_state["map_center"] = [start_point.y, start_point.x]
+if "map_zoom" not in st.session_state:
+    st.session_state["map_zoom"] = 12
+
 # Create a Folium map
-m = folium.Map(location=[start_point.y, start_point.x], zoom_start=12, tiles=None)
+m = folium.Map(location=st.session_state["map_center"], zoom_start=st.session_state["map_zoom"] , tiles=None, control_scale=True)
 
 folium.TileLayer(
     tiles='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
@@ -119,4 +127,29 @@ colormap.add_to(m)
 # folium.GeoJson(gdf).add_to(m)
 
 # Display the map
-st_folium(m, use_container_width=True, height=600, key="iso_map")
+map_data = st_folium(m, use_container_width=True, height=600, key="iso_map", returned_objects=["last_object_clicked", "center", "zoom"])
+
+# if map_data and "zoom" in map_data and "center" in map_data:
+#     center_dict = map_data["center"]
+#     center_list = [center_dict['lat'], center_dict['lng']]
+#     st.session_state["map_zoom"] = map_data["zoom"]
+#     st.session_state["map_center"] = center_list
+
+# Update session_state only if user moved the map
+# if map_data and "center" in map_data and "zoom" in map_data:
+#     new_center = [map_data["center"]["lat"], map_data["center"]["lng"]]
+#     new_zoom = map_data["zoom"]
+#     print(new_center)
+#     st.session_state.map_center = new_center
+#     st.session_state.map_zoom = new_zoom
+    
+    # # Save only if it's a real change (optional)
+    # if new_center != st.session_state.map_center or new_zoom != st.session_state.map_zoom:
+    #     print("SALVAAA")
+    #     st.session_state.map_center = new_center
+    #     st.session_state.map_zoom = new_zoom
+
+
+
+
+    
