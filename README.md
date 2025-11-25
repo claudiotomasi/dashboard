@@ -7,7 +7,6 @@ The project evaluates the feasibility of creating an interactive, map-based acce
 
 A live demo (if available) can be found at:  
 👉 **[Demo Link](https://freeway.streamlit.app/)**  
-*(Provide me the correct link and I will update it.)*
 
 ---
 
